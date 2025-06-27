@@ -1,51 +1,40 @@
-# Survey Data Dashboard
+# Survey Data Dashboard - Phase 1 Update
 
-A web-based dashboard for analyzing survey data with interactive charts and cross-referencing capabilities.
+A web-based dashboard for analyzing survey data with interactive charts and correlation analysis.
 
-## Features
+## New Features in Phase 1:
+- **Clear Data & Upload New File**: Added ability to clear current data and upload a new Excel file without refreshing the page
+- **Enhanced File Management**: Better handling of file uploads and data state management
+- **Improved User Experience**: Clear visual feedback when clearing data
 
-- **Password Protection**: Secure access with password authentication
-- **File Upload**: Upload Excel files (.xlsx, .xls) containing survey data
-- **Smart Question Handling**: Automatically detects Single Answer (SA) and Multiple Answer (MA) questions
+## Features:
+- **Password Protection**: Secure access with configurable password
+- **Excel File Upload**: Support for .xlsx and .xls files
+- **Smart Question Grouping**: Automatically handles Single Answer (SA) and Multiple Answer (MA) questions
 - **Interactive Charts**: 
   - Pie charts for single variable analysis
   - Grouped bar charts for correlation analysis between two variables
-- **Data Integrity**: Preserves all respondent data with unique ID assignment
-- **Cross-Reference Analysis**: Select multiple variables for comprehensive analysis
+- **Variable Selection**: Choose 1-5 variables for comprehensive analysis
+- **Responsive Design**: Works on desktop and mobile devices
 
-## Technology Stack
+## How to Use:
+1. Enter password: `survey2025`
+2. Upload your Excel file containing survey data
+3. Select variables from the list (1-5 variables)
+4. Click "Generate Analysis" to view charts
+5. Use "Clear Data & Upload New File" to analyze different datasets
 
-- **Backend**: Flask (Python)
-- **Frontend**: React with shadcn/ui components
-- **Charts**: Recharts library
-- **Data Processing**: pandas, numpy, openpyxl
+## Technical Details:
+- **Frontend**: React with shadcn/ui components and Recharts for visualization
+- **Backend**: Flask with pandas for data processing
+- **Deployment**: Optimized for Render deployment
 
-## Deployment
+## Password:
+Default password is `survey2025` (can be changed in the code)
 
-This application is configured for deployment on Render with:
-- Automatic dependency installation
-- Production-ready Gunicorn server
-- CORS enabled for frontend-backend communication
-
-## Usage
-
-1. Access the dashboard URL
-2. Enter the password: `survey2025`
-3. Upload your Excel survey data file
-4. Select variables for analysis
-5. Generate interactive charts and insights
-
-## Data Format
-
-The dashboard expects Excel files with:
-- Each row representing a unique survey respondent
-- Column headers as survey questions
-- SA (Single Answer) questions for single-choice responses
-- MA (Multiple Answer) questions for multiple-choice responses (split across columns)
-
-## Security
-
-- Password-protected access
-- HTTPS encryption (when deployed)
-- No data persistence (files processed in memory)
+## Data Format:
+- Each row represents a unique survey respondent
+- Columns represent survey questions and responses
+- SA (Single Answer) questions: One response per respondent
+- MA (Multiple Answer) questions: Multiple responses spread across related columns (e.g., Question MA, Question MA.1, Question MA.2)
 
