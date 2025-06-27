@@ -6,23 +6,23 @@ import re
 import numpy as np
 from collections import Counter
 
-survey_bp = Blueprint(\'survey\', __name__)
+survey_bp = Blueprint("survey", __name__)
 
 # Global variable to store the current dataframe
 current_df = None
 
 def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in {\'xlsx\', \'xls\'}
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in {"xlsx", "xls"}
 
 def process_ma_questions(df, columns):
     """Process Multiple Answer (MA) questions by grouping related columns"""
     ma_groups = {}
     
     for col in columns:
-        # Check if it\'s an MA question
-        if \'MA\' in col or \'[MA]\' in col:
+        # Check if it's an MA question
+        if "MA" in col or "[MA]" in col:
             # Extract the base question (remove .1, .2, etc.)
-            base_question = re.sub(r\'\\.?\\d+$\'', \'\', col).strip()
+            base_question = re.sub(r"\.\d+$", "", col).strip()
             
             if base_question not in ma_groups:
                 ma_groups[base_question] = []
@@ -38,7 +38,7 @@ def get_variable_data(df, variable):
         # Single Answer (SA) question
         return df[variable].dropna().tolist()
     else:
-        # Check if it\'s an MA question
+        # Check if it's an MA question
         for base_question, related_cols in ma_groups.items():
             if variable == base_question:
                 # Combine all related MA columns
@@ -59,9 +59,9 @@ def analyze_single_variable(df, variable):
     
     value_counts = pd.Series(data).value_counts()
     return {
-        \'type\': \'single\',
-        \'chart_type\': \'pie\',
-        \'data\': [{\'name\': str(k), \'value\': int(v)} for k, v in value_counts.items()]
+        "type": "single",
+        "chart_type": "pie",
+        "data": [{"name": str(k), "value": int(v)} for k, v in value_counts.items()]
     }
 
 def analyze_correlation(df, var1, var2):
@@ -90,14 +90,14 @@ def analyze_correlation(df, var1, var2):
                 count = cross_tab.loc[var1_val, var2_val]
                 if count > 0:
                     correlation_data.append({
-                        \'category\': str(var1_val),
-                        \'subcategory\': str(var2_val),
-                        \'value\': int(count)
+                        "category": str(var1_val),
+                        "subcategory": str(var2_val),
+                        "value": int(count)
                     })
     
     # Handle SA vs MA or MA vs MA correlation (simplified approach)
     else:
-        # For MA questions, we\'ll show the top combinations
+        # For MA questions, we'll show the top combinations
         var1_data = pd.Series(data1).value_counts().head(10)
         var2_data = pd.Series(data2).value_counts().head(10)
         
@@ -108,16 +108,16 @@ def analyze_correlation(df, var1, var2):
                 estimated_correlation = min(var1_count, var2_count) // 10  # Simplified estimation
                 if estimated_correlation > 0:
                     correlation_data.append({
-                        \'category\': str(var1_val),
-                        \'subcategory\': str(var2_val),
-                        \'value\': int(estimated_correlation)
+                        "category": str(var1_val),
+                        "subcategory": str(var2_val),
+                        "value": int(estimated_correlation)
                     })
     
     return {
-        \'type\': \'correlation\',
-        \'chart_type\': \'grouped_bar\',
-        \'data\': correlation_data[:20],  # Limit to top 20 combinations
-        \'variables\': [var1, var2]
+        "type": "correlation",
+        "chart_type": "grouped_bar",
+        "data": correlation_data[:20],  # Limit to top 20 combinations
+        "variables": [var1, var2]
     }
 
 def analyze_variables(df, variables):
@@ -157,20 +157,20 @@ def analyze_variables(df, variables):
     
     return results
 
-@survey_bp.route(\'/upload\', methods=[\'POST\'])
+@survey_bp.route("/upload", methods=["POST"])
 def upload_file():
     global current_df
     
-    if \'file\' not in request.files:
-        return jsonify({\'error\': \'No file part\'}), 400
+    if "file" not in request.files:
+        return jsonify({"error": "No file part"}), 400
     
-    file = request.files[\'file\']
-    if file.filename == \'\':
-        return jsonify({\'error\': \'No selected file\'}), 400
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "No selected file"}), 400
     
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        filepath = os.path.join(current_app.config[\'UPLOAD_FOLDER\'], filename)
+        filepath = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
         file.save(filepath)
         
         try:
@@ -178,8 +178,8 @@ def upload_file():
             df = pd.read_excel(filepath)
             
             # Add unique ID if not present
-            if \'Manus_UID\' not in df.columns:
-                df[\'Manus_UID\'] = range(1, len(df) + 1)
+            if "Manus_UID" not in df.columns:
+                df["Manus_UID"] = range(1, len(df) + 1)
             
             current_df = df
             
@@ -195,7 +195,7 @@ def upload_file():
             
             for col in columns:
                 if col not in processed_cols:
-                    # Check if it\'s part of an MA group
+                    # Check if it's part of an MA group
                     is_ma_part = False
                     for base_question, related_cols in ma_groups.items():
                         if col in related_cols:
@@ -210,45 +210,47 @@ def upload_file():
                         processed_cols.add(col)
             
             return jsonify({
-                \'message\': \'File uploaded successfully\',
-                \'columns\': unique_questions,
-                \'rows\': len(df)
+                "message": "File uploaded successfully",
+                "columns": unique_questions,
+                "rows": len(df)
             })
             
         except Exception as e:
-            return jsonify({\'error\': f\'Error processing file: {str(e)}\'}), 500
+            return jsonify({"error": f"Error processing file: {str(e)}"}), 500
     
-    return jsonify({\'error\': \'Invalid file type\'}), 400
+    return jsonify({"error": "Invalid file type"}), 400
 
-@survey_bp.route(\'/clear_data\', methods=[\'POST\'])
+@survey_bp.route("/clear_data", methods=["POST"])
 def clear_data():
     global current_df
     current_df = None
-    # Optionally, delete the uploaded file from the server if it\'s no longer needed
-    # For now, we\'ll just clear the dataframe in memory.
-    return jsonify({\'message\': \'Data cleared successfully\'}), 200
+    # Optionally, delete the uploaded file from the server if it's no longer needed
+    # For now, we'll just clear the dataframe in memory.
+    return jsonify({"message": "Data cleared successfully"}), 200
 
-@survey_bp.route(\'/analyze\', methods=[\'POST\'])
+@survey_bp.route("/analyze", methods=["POST"])
 def analyze_data():
     global current_df
     
     if current_df is None:
-        return jsonify({\'error\': \'No data uploaded\'}), 400
+        return jsonify({"error": "No data uploaded"}), 400
     
     data = request.get_json()
-    variables = data.get(\'variables\', [])
+    variables = data.get("variables", [])
     
     if len(variables) < 1:
-        return jsonify({\'error\': \'At least 1 variable required\'}), 400
+        return jsonify({"error": "At least 1 variable required"}), 400
     
     try:
         results = analyze_variables(current_df, variables)
         return jsonify({
-            \'message\': \'Analysis completed\',
-            \'results\': results,
-            \'variables\': variables
+            "message": "Analysis completed",
+            "results": results,
+            "variables": variables
         })
     except Exception as e:
-        return jsonify({\'error\': f\'Error analyzing data: {str(e)}\'}), 500
+        return jsonify({"error": f"Error analyzing data: {str(e)}"}), 500
+
+
 
 
