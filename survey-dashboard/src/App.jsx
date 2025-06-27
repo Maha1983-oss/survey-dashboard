@@ -177,6 +177,7 @@ function Dashboard() {
       
       if (response.ok) {
         const data = await response.json()
+        console.log('API Response:', data) // Debug log
         setChartData(data)
       } else {
         console.error('Failed to generate chart')
@@ -191,6 +192,11 @@ function Dashboard() {
   }
 
   const renderPieChart = (variable, data) => {
+    // Ensure data exists and is an array
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return <div className="text-center text-gray-500 py-8">No data available for chart</div>
+    }
+
     return (
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
@@ -218,6 +224,11 @@ function Dashboard() {
   }
 
   const renderGroupedBarChart = (variable, data) => {
+    // Ensure data exists and is an array
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return <div className="text-center text-gray-500 py-8">No data available for chart</div>
+    }
+
     // Group data by category for grouped bar chart
     const groupedData = {}
     data.forEach(item => {
@@ -260,7 +271,7 @@ function Dashboard() {
   }
 
   const renderDataTable = (tableData) => {
-    if (!tableData) return null
+    if (!tableData) return <div className="text-center text-gray-500 py-8">No table data available</div>
 
     // Handle single variable table
     if (tableData.question) {
@@ -287,7 +298,7 @@ function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {tableData.data.map((row, index) => (
+              {tableData.data && tableData.data.map((row, index) => (
                 <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <td className="px-4 py-3 text-sm text-gray-900 font-medium">
                     {row.response}
@@ -333,7 +344,7 @@ function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {tableData.data.map((row, index) => (
+              {tableData.data && tableData.data.map((row, index) => (
                 <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <td className="px-4 py-3 text-sm text-gray-900 font-medium">
                     {row.var1_response}
@@ -355,12 +366,18 @@ function Dashboard() {
       )
     }
 
-    return null
+    return <div className="text-center text-gray-500 py-8">No table data available</div>
   }
 
   const renderAnalysis = (variable, result) => {
+    if (!result) return null
+
     const isCorrelation = result.type === 'correlation'
     const chartIcon = isCorrelation ? <TrendingUp className="h-5 w-5" /> : <PieChart className="h-5 w-5" />
+    
+    // Get chart data - handle both old and new API response formats
+    const chartData = result.chart_data || result.data || []
+    const tableData = result.table_data || null
     
     return (
       <div key={variable} className="mb-8">
@@ -394,14 +411,14 @@ function Dashboard() {
           
           <TabsContent value="chart" className="mt-4">
             <div className="bg-white p-4 rounded-lg border">
-              {result.chart_type === 'pie' && renderPieChart(variable, result.chart_data || result.data)}
-              {result.chart_type === 'grouped_bar' && renderGroupedBarChart(variable, result.chart_data || result.data)}
+              {result.chart_type === 'pie' && renderPieChart(variable, chartData)}
+              {result.chart_type === 'grouped_bar' && renderGroupedBarChart(variable, chartData)}
             </div>
           </TabsContent>
           
           <TabsContent value="table" className="mt-4">
             <div className="bg-white p-4 rounded-lg border">
-              {renderDataTable(result.table_data)}
+              {renderDataTable(tableData)}
             </div>
           </TabsContent>
         </Tabs>
