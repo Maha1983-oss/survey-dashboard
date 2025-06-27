@@ -50,18 +50,51 @@ def get_variable_data(df, variable):
     
     return []
 
-def analyze_single_variable(df, variable):
-    """Analyze a single variable and return chart data"""
+def generate_table_data(df, variable):
+    """Generate table data with counts and percentages for a single variable"""
     data = get_variable_data(df, variable)
     
     if not data:
         return None
     
     value_counts = pd.Series(data).value_counts()
+    total_responses = len(data)
+    
+    table_data = []
+    for response, count in value_counts.items():
+        percentage = (count / total_responses) * 100
+        table_data.append({
+            "response": str(response),
+            "count": int(count),
+            "percentage": round(percentage, 2)
+        })
+    
+    return {
+        "question": variable,
+        "total_responses": total_responses,
+        "data": table_data
+    }
+
+def analyze_single_variable(df, variable):
+    """Analyze a single variable and return both chart and table data"""
+    data = get_variable_data(df, variable)
+    
+    if not data:
+        return None
+    
+    value_counts = pd.Series(data).value_counts()
+    
+    # Generate chart data
+    chart_data = [{"name": str(k), "value": int(v)} for k, v in value_counts.items()]
+    
+    # Generate table data
+    table_data = generate_table_data(df, variable)
+    
     return {
         "type": "single",
         "chart_type": "pie",
-        "data": [{"name": str(k), "value": int(v)} for k, v in value_counts.items()]
+        "chart_data": chart_data,
+        "table_data": table_data
     }
 
 def analyze_correlation(df, var1, var2):
@@ -94,6 +127,22 @@ def analyze_correlation(df, var1, var2):
                         "subcategory": str(var2_val),
                         "value": int(count)
                     })
+        
+        # Generate correlation table data
+        correlation_table = []
+        total_combinations = cross_tab.sum().sum()
+        
+        for var1_val in cross_tab.index:
+            for var2_val in cross_tab.columns:
+                count = cross_tab.loc[var1_val, var2_val]
+                if count > 0:
+                    percentage = (count / total_combinations) * 100
+                    correlation_table.append({
+                        "var1_response": str(var1_val),
+                        "var2_response": str(var2_val),
+                        "count": int(count),
+                        "percentage": round(percentage, 2)
+                    })
     
     # Handle SA vs MA or MA vs MA correlation (simplified approach)
     else:
@@ -102,6 +151,7 @@ def analyze_correlation(df, var1, var2):
         var2_data = pd.Series(data2).value_counts().head(10)
         
         # Create a simplified correlation showing top values from each variable
+        correlation_table = []
         for i, (var1_val, var1_count) in enumerate(var1_data.items()):
             for j, (var2_val, var2_count) in enumerate(var2_data.items()):
                 # Estimate correlation based on relative frequencies
@@ -112,16 +162,31 @@ def analyze_correlation(df, var1, var2):
                         "subcategory": str(var2_val),
                         "value": int(estimated_correlation)
                     })
+                    
+                    # Add to table data
+                    total_est = len(data1) + len(data2)
+                    percentage = (estimated_correlation / total_est) * 100
+                    correlation_table.append({
+                        "var1_response": str(var1_val),
+                        "var2_response": str(var2_val),
+                        "count": int(estimated_correlation),
+                        "percentage": round(percentage, 2)
+                    })
     
     return {
         "type": "correlation",
         "chart_type": "grouped_bar",
-        "data": correlation_data[:20],  # Limit to top 20 combinations
+        "chart_data": correlation_data[:20],  # Limit to top 20 combinations
+        "table_data": {
+            "var1": var1,
+            "var2": var2,
+            "data": correlation_table[:20]
+        },
         "variables": [var1, var2]
     }
 
 def analyze_variables(df, variables):
-    """Analyze selected variables and return chart data"""
+    """Analyze selected variables and return chart and table data"""
     results = {}
     
     if len(variables) == 1:
@@ -250,7 +315,4 @@ def analyze_data():
         })
     except Exception as e:
         return jsonify({"error": f"Error analyzing data: {str(e)}"}), 500
-
-
-
 
